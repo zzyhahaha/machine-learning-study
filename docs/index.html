@@ -1,0 +1,856 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>78→70 训练本</title>
+<meta name="description" content="宿舍训练 + 食堂饮食的减脂计划，带动作动画指导，可以离线使用。">
+<meta name="theme-color" content="#EDF1EB" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#0D1411" media="(prefers-color-scheme: dark)">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="训练本">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="icon-180.png">
+<link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
+<style>:root{padding-top:env(safe-area-inset-top,0px)}body{margin:0}[hidden]{display:none!important}img{max-width:100%}</style>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=ZCOOL+QingKe+HuangYou&display=swap">
+<style>
+/* Layout: phone-first single column. Field-green "today" hero with lane lines, plain cards below, fixed bottom tabs; exercise guides open as a full-screen sheet with an animated stick figure. */
+:root{
+  --bg:#EDF1EB; --surface:#FFFFFF; --surface-2:#F4F7F2; --ink:#15201A; --muted:#5D6D63; --line:#D5DDD4;
+  --field:#1E5B3C; --field-ink:#F1F7F1; --lane:rgba(255,255,255,.22);
+  --track:#C4462B; --track-ink:#FFFFFF; --track-soft:#F6E1D9;
+  --good:#2B7A4B; --good-soft:#DDEFE3; --warn:#9A6614; --warn-soft:#F6EBD6;
+  --fig:#15201A; --fig-far:#A3B0A8; --prop:#3E4A43; --floor:#C9D2C8;
+  --font-display:"ZCOOL QingKe HuangYou","PingFang SC","Hiragino Sans GB",sans-serif;
+  --font-num:"Barlow Condensed","DIN Alternate","Helvetica Neue",Arial,sans-serif;
+  --font-body:-apple-system,BlinkMacSystemFont,"PingFang SC","Hiragino Sans GB","Microsoft YaHei","Noto Sans SC",sans-serif;
+  --r:14px;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#0D1411; --surface:#151F1A; --surface-2:#1A2620; --ink:#E4ECE6; --muted:#95A59B; --line:#283630;
+  --field:#174A30; --field-ink:#E9F3EB; --lane:rgba(255,255,255,.12);
+  --track:#EC6A4B; --track-ink:#1B0D08; --track-soft:#3B231C;
+  --good:#5DC18A; --good-soft:#1D3527; --warn:#E2AE4C; --warn-soft:#3A2F1A;
+  --fig:#E4ECE6; --fig-far:#5E6F65; --prop:#B7C4BC; --floor:#34443B; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#0D1411; --surface:#151F1A; --surface-2:#1A2620; --ink:#E4ECE6; --muted:#95A59B; --line:#283630;
+  --field:#174A30; --field-ink:#E9F3EB; --lane:rgba(255,255,255,.12);
+  --track:#EC6A4B; --track-ink:#1B0D08; --track-soft:#3B231C;
+  --good:#5DC18A; --good-soft:#1D3527; --warn:#E2AE4C; --warn-soft:#3A2F1A;
+  --fig:#E4ECE6; --fig-far:#5E6F65; --prop:#B7C4BC; --floor:#34443B; color-scheme:dark}
+
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font-family:var(--font-body);font-size:15px;line-height:1.6;-webkit-text-size-adjust:100%;
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));
+  padding-block:0 calc(84px + env(safe-area-inset-bottom,0px))}
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:10;background:var(--bg)}
+.wrap{max-width:560px;margin:0 auto}
+button,input,select{font:inherit;color:inherit}
+button{cursor:pointer}
+:focus-visible{outline:2px solid var(--track);outline-offset:2px}
+h1,h2,h3{margin:0;line-height:1.25;text-wrap:balance}
+p{margin:0}
+.num{font-family:var(--font-num);font-variant-numeric:tabular-nums;letter-spacing:.01em}
+.muted{color:var(--muted)}
+.small{font-size:13px}
+
+/* top bar */
+.top{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;background:var(--bg);display:flex;align-items:center;justify-content:space-between;gap:12px;padding-block:12px 10px}
+.brand{font-family:var(--font-display);font-size:22px;letter-spacing:.02em}
+.brand b{color:var(--track);font-weight:400}
+.datechip{font-size:13px;color:var(--muted);text-align:right;line-height:1.3}
+.sync{display:inline-block;width:7px;height:7px;border-radius:50%;background:var(--fig-far);margin-right:5px;vertical-align:1px}
+.sync.on{background:var(--good)}
+
+.view{display:flex;flex-direction:column;gap:14px;padding-block:4px 8px}
+.sec-title{font-size:12px;letter-spacing:.12em;color:var(--muted);text-transform:uppercase;margin:10px 2px -4px}
+
+/* field hero */
+.field{position:relative;overflow:hidden;background:var(--field);color:var(--field-ink);border-radius:18px;padding:18px 18px 16px;
+  background-image:repeating-linear-gradient(90deg,transparent 0 46px,var(--lane) 46px 48px)}
+.field .eyebrow{font-size:12px;letter-spacing:.14em;opacity:.8}
+.field h2{font-family:var(--font-display);font-weight:400;font-size:34px;margin-top:4px}
+.field .meta{font-size:13px;opacity:.85;margin-top:2px}
+.switch{display:flex;flex-wrap:wrap;gap:6px;margin-top:12px}
+.switch button{border:1px solid rgba(255,255,255,.35);background:transparent;color:var(--field-ink);border-radius:999px;padding:4px 12px;font-size:13px}
+.switch button[aria-pressed="true"]{background:var(--field-ink);color:var(--field);border-color:var(--field-ink)}
+
+.card{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:14px 16px}
+.card h3{font-size:16px;font-weight:700;display:flex;align-items:center;justify-content:space-between;gap:8px}
+.card h3 .tag{font-size:12px;font-weight:500;color:var(--muted)}
+.card > * + *{margin-top:10px}
+.list{margin:0;padding-left:1.2em}
+.list li + li{margin-top:4px}
+.note{background:var(--surface-2);border-radius:10px;padding:10px 12px;font-size:14px;color:var(--muted)}
+.note b{color:var(--ink)}
+.warnbox{background:var(--warn-soft);color:var(--ink);border-radius:10px;padding:10px 12px;font-size:14px}
+.goodbox{background:var(--good-soft);color:var(--ink);border-radius:10px;padding:10px 12px;font-size:14px}
+
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;border:0;border-radius:12px;padding:12px 16px;font-weight:700;font-size:16px;min-height:46px}
+.btn.primary{background:var(--track);color:var(--track-ink)}
+.btn.ghost{background:var(--surface-2);color:var(--ink);border:1px solid var(--line)}
+.btn.block{width:100%}
+.btn.sm{min-height:34px;padding:6px 12px;font-size:14px;border-radius:10px}
+.linkbtn{background:none;border:0;padding:0;color:var(--track);font-weight:600;font-size:14px}
+
+/* exercise rows */
+.exlist{display:flex;flex-direction:column}
+.exrow{display:grid;grid-template-columns:44px 1fr auto;align-items:center;gap:10px;padding:10px 0;border-top:1px solid var(--line);background:none;border-left:0;border-right:0;border-bottom:0;text-align:left;width:100%}
+.exrow:first-child{border-top:0}
+.exrow .idx{font-family:var(--font-num);font-size:22px;font-weight:700;color:var(--muted);text-align:center}
+.exrow .nm{font-weight:700;font-size:15px}
+.exrow .sub{font-size:12px;color:var(--muted)}
+.exrow .rx{font-family:var(--font-num);font-size:19px;font-weight:600;white-space:nowrap}
+.exrow .how{font-size:12px;color:var(--track);font-weight:600}
+
+/* logger */
+.logex{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:12px 14px}
+.logex.done{border-color:var(--good)}
+.loghead{display:flex;justify-content:space-between;align-items:flex-start;gap:10px}
+.loghead .nm{font-weight:700;font-size:16px}
+.loghead .rx{font-family:var(--font-num);font-size:18px;font-weight:600;white-space:nowrap}
+.last{font-size:12px;color:var(--muted);margin-top:2px}
+.sets{display:flex;flex-direction:column;gap:6px;margin-top:10px}
+.setrow{display:grid;grid-template-columns:28px 1fr 1fr 48px;gap:8px;align-items:center}
+.setrow.noload{grid-template-columns:28px 1fr 48px}
+.setrow .sn{font-family:var(--font-num);font-size:18px;color:var(--muted);text-align:center}
+.field-in{display:flex;align-items:center;background:var(--surface-2);border:1px solid var(--line);border-radius:10px;padding:0 10px;min-width:0}
+.field-in input{width:100%;min-width:0;border:0;background:transparent;font-size:17px;padding:9px 0;font-family:var(--font-num);font-variant-numeric:tabular-nums;outline:none}
+.field-in span{font-size:12px;color:var(--muted);white-space:nowrap}
+.tick{height:42px;border-radius:10px;border:1.5px solid var(--line);background:var(--surface);font-size:20px;line-height:1;color:var(--muted)}
+.tick[aria-pressed="true"]{background:var(--good);border-color:var(--good);color:var(--surface)}
+
+/* check chips */
+.chips{display:flex;flex-wrap:wrap;gap:8px}
+.chip{border:1.5px solid var(--line);background:var(--surface);border-radius:999px;padding:7px 12px;font-size:14px}
+.chip[aria-pressed="true"]{border-color:var(--good);background:var(--good-soft)}
+.chip[aria-pressed="true"]::before{content:"✓ ";color:var(--good);font-weight:700}
+
+.protein{display:flex;align-items:baseline;gap:8px}
+.protein .big{font-family:var(--font-num);font-size:40px;font-weight:700;line-height:1}
+.bar{height:8px;border-radius:99px;background:var(--surface-2);overflow:hidden;border:1px solid var(--line)}
+.bar i{display:block;height:100%;background:var(--track);border-radius:99px;transition:width .3s}
+.addgrid{display:grid;grid-template-columns:repeat(3,1fr);gap:6px}
+.addgrid button{border:1px solid var(--line);background:var(--surface-2);border-radius:10px;padding:8px 4px;font-size:13px;line-height:1.3}
+.addgrid button b{display:block;font-family:var(--font-num);font-size:17px}
+
+/* week strip */
+.week{display:grid;grid-template-columns:repeat(7,1fr);gap:4px}
+.day{border-radius:10px;padding:8px 2px;text-align:center;background:var(--surface-2);font-size:12px;line-height:1.35;border:1px solid transparent}
+.day b{display:block;font-size:13px}
+.day.today{border-color:var(--track);background:var(--track-soft)}
+.day.s b{color:var(--track)}
+
+/* tables */
+.tbl{width:100%;border-collapse:collapse;font-size:14px}
+.tbl th,.tbl td{text-align:left;padding:8px 6px;border-top:1px solid var(--line);vertical-align:top}
+.tbl th{font-weight:600;color:var(--muted);font-size:12px;border-top:0}
+.tbl td.n{font-family:var(--font-num);font-size:16px;white-space:nowrap;text-align:right}
+.scroll-x{overflow-x:auto}
+
+/* stats */
+.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.stat{background:var(--surface-2);border-radius:12px;padding:10px}
+.stat .k{font-size:12px;color:var(--muted)}
+.stat .v{font-family:var(--font-num);font-size:26px;font-weight:700;line-height:1.1}
+.stat .v small{font-size:13px;font-weight:500;color:var(--muted)}
+.inrow{display:grid;grid-template-columns:1fr 1fr auto;gap:8px;align-items:end}
+.inrow label{font-size:12px;color:var(--muted);display:flex;flex-direction:column;gap:4px}
+.chart{width:100%;height:auto;display:block}
+.chart text{font-family:var(--font-num);font-size:11px;fill:var(--muted)}
+
+/* bottom nav */
+.nav{position:fixed;left:0;right:0;bottom:0;z-index:20;background:var(--surface);border-top:1px solid var(--line);
+  padding:6px max(8px,env(safe-area-inset-right,0px)) calc(6px + env(safe-area-inset-bottom,0px)) max(8px,env(safe-area-inset-left,0px))}
+.nav .in{max-width:560px;margin:0 auto;display:grid;grid-template-columns:repeat(4,1fr)}
+.nav button{background:none;border:0;padding:6px 0 4px;display:flex;flex-direction:column;align-items:center;gap:2px;font-size:12px;color:var(--muted)}
+.nav button svg{width:24px;height:24px}
+.nav button[aria-current="page"]{color:var(--track);font-weight:700}
+
+/* rest timer */
+.timer{position:fixed;left:0;right:0;bottom:calc(62px + env(safe-area-inset-bottom,0px));z-index:19;padding:0 max(16px,env(safe-area-inset-right,0px)) 8px max(16px,env(safe-area-inset-left,0px))}
+.timer .in{max-width:560px;margin:0 auto;background:var(--ink);color:var(--bg);border-radius:14px;padding:10px 14px;display:flex;align-items:center;gap:12px;box-shadow:0 6px 20px rgba(0,0,0,.18)}
+.timer .t{font-family:var(--font-num);font-size:28px;font-weight:700;min-width:70px}
+.timer .lbl{flex:1;font-size:13px;line-height:1.35}
+.timer button{background:transparent;border:1px solid currentColor;color:inherit;border-radius:9px;padding:5px 10px;font-size:13px}
+.timer.over .in{background:var(--good);color:var(--surface)}
+
+/* sheet */
+.sheet{position:fixed;inset:0;z-index:30;background:var(--bg);overflow-y:auto;-webkit-overflow-scrolling:touch;
+  padding:env(safe-area-inset-top,0px) max(16px,env(safe-area-inset-right,0px)) calc(24px + env(safe-area-inset-bottom,0px)) max(16px,env(safe-area-inset-left,0px))}
+.sheet .wrap{display:flex;flex-direction:column;gap:12px;padding-block:8px 24px}
+.sheethead{position:sticky;top:0;background:var(--bg);display:flex;align-items:center;gap:10px;padding-block:8px;z-index:2}
+.sheethead h2{flex:1;font-family:var(--font-display);font-weight:400;font-size:26px}
+.close{width:40px;height:40px;border-radius:50%;border:1px solid var(--line);background:var(--surface);font-size:20px;line-height:1}
+.stage{background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:6px;position:relative}
+.stage svg{display:block;width:100%;height:auto}
+.stage .play{position:absolute;right:10px;top:10px}
+.seg{display:flex;gap:6px;flex-wrap:wrap}
+.seg button{border:1.5px solid var(--line);background:var(--surface);border-radius:999px;padding:5px 12px;font-size:13px}
+.seg button[aria-pressed="true"]{border-color:var(--track);background:var(--track-soft);font-weight:700}
+.facts{display:grid;grid-template-columns:auto 1fr;gap:4px 12px;font-size:14px}
+.facts dt{color:var(--muted)}
+.facts dd{margin:0}
+.steps{counter-reset:s;list-style:none;padding:0;margin:0;display:flex;flex-direction:column;gap:8px}
+.steps li{counter-increment:s;display:grid;grid-template-columns:26px 1fr;gap:8px}
+.steps li::before{content:counter(s);font-family:var(--font-num);font-weight:700;font-size:15px;width:24px;height:24px;border-radius:50%;background:var(--track-soft);color:var(--track);display:flex;align-items:center;justify-content:center;margin-top:1px}
+.xlist{list-style:none;padding:0;margin:0;display:flex;flex-direction:column;gap:6px}
+.xlist li{display:grid;grid-template-columns:20px 1fr;gap:6px}
+.xlist li::before{content:"✕";color:var(--track);font-weight:700}
+.olist{list-style:none;padding:0;margin:0;display:flex;flex-direction:column;gap:6px}
+.olist li{display:grid;grid-template-columns:20px 1fr;gap:6px}
+.olist li::before{content:"●";color:var(--good);font-size:10px;margin-top:5px}
+.ext{display:inline-flex;align-items:center;gap:6px;color:var(--track);font-weight:700;text-decoration:none}
+.fig-cap{font-size:12px;color:var(--muted);text-align:center;padding:2px 0 4px}
+@media (prefers-reduced-motion: reduce){.bar i{transition:none}}
+.inrow label.btn{font-size:16px;color:var(--ink);flex-direction:row;gap:6px}
+</style>
+</head>
+<body>
+
+<div class="wrap">
+  <header class="top">
+    <div class="brand">78<b>→</b>70 训练本</div>
+    <div class="datechip"><div id="dateText">—</div><div class="small"><span class="sync" id="syncDot"></span><span id="syncText">连接中</span></div></div>
+  </header>
+
+  <main>
+    <section class="view" id="v-today" data-view="today"></section>
+    <section class="view" id="v-train" data-view="train" hidden></section>
+    <section class="view" id="v-food" data-view="food" hidden></section>
+    <section class="view" id="v-log" data-view="log" hidden></section>
+  </main>
+</div>
+
+<div class="timer" id="timer" hidden>
+  <div class="in">
+    <div class="t" id="timerT">1:30</div>
+    <div class="lbl" id="timerL">组间休息，喝口水</div>
+    <button type="button" id="timerAdd">+30秒</button>
+    <button type="button" id="timerSkip">跳过</button>
+  </div>
+</div>
+
+<div class="sheet" id="sheet" hidden role="dialog" aria-modal="true" aria-labelledby="sheetTitle">
+  <div class="wrap" id="sheetBody"></div>
+</div>
+
+<nav class="nav" aria-label="页面">
+  <div class="in">
+    <button type="button" data-tab="today" aria-current="page">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="5" width="17" height="15" rx="2.5"/><path d="M3.5 10h17M8 3v4M16 3v4"/><path d="M9 14.5l2 2 4-4"/></svg>今天</button>
+    <button type="button" data-tab="train">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M6.5 7v10M17.5 7v10M3.5 9.5v5M20.5 9.5v5M6.5 12h11"/></svg>训练</button>
+    <button type="button" data-tab="food">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 11h16a8 8 0 0 1-16 0z"/><path d="M8 7c0-1.5 1-1.5 1-3M12 7c0-1.5 1-1.5 1-3M16 7c0-1.5 1-1.5 1-3"/></svg>饮食</button>
+    <button type="button" data-tab="log">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19h16"/><path d="M5 15l4-4 3 3 6-7"/><circle cx="18" cy="7" r="1.2" fill="currentColor"/></svg>记录</button>
+  </div>
+</nav>
+
+<script>
+"use strict";
+/* ---------- content ---------- */
+const EX = {
+  squat:{name:'高脚杯深蹲',muscles:'大腿前侧、臀部、核心',equip:'一只哑铃（没有就徒手，或背上装书的书包）',start:'起始重量参考：8–12kg',
+    variants:[{anim:'goblet',label:'高脚杯深蹲'},{anim:'bwsquat',label:'徒手深蹲（简单）',note:'双臂向前平举帮助平衡，其他要点完全一样。一组能轻松做 20 个，就改成背书包或拿哑铃。'}],
+    steps:['双脚略比肩宽，脚尖稍微朝外（15–30°）。','双手竖着捧住哑铃的一端，贴在胸前。','吸气，屁股往后、往下坐，膝盖朝脚尖方向打开。','蹲到大腿至少和地面平行（背不弯的前提下可以更低）。','整个脚掌踩地发力站起，站直时呼气。'],
+    cues:['全程挺胸，背不要弯','膝盖和脚尖朝同一个方向，不要往里扣','脚跟一直踩实地面','哑铃始终贴着胸口'],
+    mistakes:['膝盖往里扣','脚跟抬起，重心跑到脚尖','下蹲时弯腰低头','只蹲一点点就起来'],
+    breath:'下蹲吸气，站起呼气',search:'高脚杯深蹲 动作教学'},
+  pushup:{name:'俯卧撑',muscles:'胸部、肩前侧、手臂后侧、核心',equip:'不需要器材',
+    variants:[{anim:'pushup',label:'标准俯卧撑'},{anim:'incline',label:'上斜俯卧撑（简单）',note:'双手撑在床沿或桌沿上做，撑的地方越高越简单。一组能做 15 个以上，就换低一点的地方，最后过渡到地面。'}],
+    steps:['双手撑地，比肩稍宽，手指朝前。','双脚并拢或稍分开，从头到脚跟绷成一条直线。','吸气，弯曲手肘，身体整体下降，直到胸口离地约一拳。','手掌用力推地，呼气，回到手臂伸直。'],
+    cues:['收紧肚子和屁股，身体像一块木板','手肘和身体夹角约 45°，不要张开成 T 字','下放时控制住，不要砸下去'],
+    mistakes:['塌腰，肚子先碰地','屁股撅得很高','只做半程，胸口离地很远','耸肩缩脖子'],
+    breath:'下降吸气，推起呼气',search:'标准俯卧撑 教学'},
+  row:{name:'单手哑铃划船',muscles:'背部、肩后侧、手臂前侧',equip:'一只哑铃 + 床沿或结实的椅子',start:'起始重量参考：8–10kg',
+    variants:[{anim:'row',label:'哑铃划船'},{anim:'bandrow',label:'弹力带划船（替代）',note:'坐在垫子上，双腿伸直，弹力带绕过脚底。双手往肚脐方向拉，手肘贴着身体往后走，停 1 秒再慢慢放回。'}],
+    steps:['同侧的手和膝盖撑在床沿上，另一只脚踩地，背部大致和地面平行。','另一只手拿哑铃，手臂自然垂直向下。','呼气，手肘贴着身体往后上方拉，把哑铃拉到腰侧。','在最高点停 1 秒，感受背部收紧，再慢慢放下。','一侧做完再换另一侧。'],
+    cues:['想着用手肘去拉，而不是用手','背保持平直，不要转身借力','往腰的方向拉，不是往胸口拉'],
+    mistakes:['身体扭转，把哑铃甩上来','耸肩，往耳朵方向拉','弓背低头'],
+    breath:'拉起呼气，放下吸气',search:'单手哑铃划船 教学'},
+  rdl:{name:'哑铃罗马尼亚硬拉',muscles:'大腿后侧、臀部、下背',equip:'一对哑铃（或抱一个装书的书包）',start:'起始重量参考：每只 8–12kg',
+    warn:'这个动作最要紧的是背不能弯。第一次先徒手对着镜子练，或者从侧面录视频检查。',
+    variants:[{anim:'rdl',label:'罗马尼亚硬拉'}],
+    steps:['双脚与髋同宽站立，双手各拿一只哑铃放在大腿前面。','膝盖微微弯曲，之后整个动作膝盖角度基本不变。','吸气，屁股往后推，上身随之前倾，哑铃贴着大腿往下滑。','放到膝盖下方或小腿中间，大腿后侧有明显拉伸感就停。','臀部发力把髋往前推，站直，呼气。'],
+    cues:['背始终挺直，头到屁股成一条线','是屁股往后推，不是弯腰往下够','哑铃贴着腿走','站直时夹紧屁股，不要往后仰'],
+    mistakes:['弓背（最容易伤腰）','膝盖弯太多，变成了深蹲','哑铃离腿太远','为了放得更低而弯背'],
+    breath:'下放吸气，站起呼气',search:'哑铃罗马尼亚硬拉 教学'},
+  plank:{name:'平板支撑',muscles:'腹部、核心整体',equip:'瑜伽垫',
+    variants:[{anim:'plank',label:'平板支撑'}],
+    steps:['趴在垫子上，前臂撑地，手肘在肩膀正下方。','脚尖撑地，把身体抬起来，从头到脚跟成一条直线。','收紧肚子和屁股，保持住，正常呼吸。'],
+    cues:['肚脐往里收','眼睛看地面，脖子不要抬','撑不住就早点停，不要塌着腰硬撑'],
+    mistakes:['塌腰','屁股撅得太高','憋气'],
+    breath:'均匀呼吸，不要憋气',search:'平板支撑 正确姿势'},
+  split:{name:'保加利亚分腿蹲',muscles:'大腿前侧、臀部（单腿）',equip:'一把椅子或床沿，可以加哑铃',
+    extra:'太轻时双手各拿一只哑铃。刚开始可以一只手扶墙或扶桌子保持平衡。',
+    variants:[{anim:'split',label:'保加利亚分腿蹲'}],
+    steps:['背对椅子站，一只脚的脚背搭在椅子上。','前脚向前迈出一大步，站稳。','吸气，身体垂直往下蹲，直到前腿大腿接近水平，后腿膝盖接近地面。','前脚掌发力站起，呼气。','做完一侧再换另一侧。'],
+    cues:['重心主要放在前腿','前膝盖和脚尖同方向','上身可以稍微前倾，但背要直','先找好距离：蹲到底时前小腿接近竖直'],
+    mistakes:['前脚离椅子太近，膝盖往前冲很多','用后腿蹬地发力','身体左右晃'],
+    breath:'下蹲吸气，站起呼气',search:'保加利亚分腿蹲 教学'},
+  pullup:{name:'引体向上',muscles:'背部、手臂前侧、握力',equip:'操场单杠',
+    variants:[{anim:'pullup',label:'引体向上'},{anim:'negative',label:'离心引体（拉不上去时）',note:'踩着台子或跳起来，让下巴先在杠上方，然后用 3–5 秒尽量慢地把身体放下来。每组 3–5 次。这是练出第一个引体向上最有效的方法。'},{anim:'invrow',label:'斜身引体（更简单）',note:'找一根齐腰高的低杠，人躺在杠下，脚跟着地，身体保持一条直线，把胸口拉向杠。身体越竖直越简单。'}],
+    steps:['正手握杠（掌心朝前），握距比肩稍宽，大拇指绕过杠握紧。','身体自然悬挂，先把肩膀往下沉，不要耸肩。','呼气，手肘往下往后拉，把身体拉到下巴过杠。','吸气，慢慢放下到手臂伸直，不要直接掉下来。'],
+    cues:['先沉肩，再发力拉','想象把手肘往裤兜里塞','身体不要大幅摆动借力','每次都完整放下'],
+    mistakes:['蹬腿、摆身体借力','只拉一半','下放太快，手臂猛地拉直'],
+    breath:'拉起呼气，放下吸气',search:'引体向上 新手教学'},
+  press:{name:'坐姿哑铃推举',muscles:'肩部、手臂后侧',equip:'一对哑铃 + 有靠背的椅子',start:'起始重量参考：每只 5–8kg',
+    variants:[{anim:'press',label:'坐姿哑铃推举'},{anim:'pike',label:'派克俯卧撑（替代）',note:'身体折成倒 V 字，屁股抬高，弯曲手肘让头顶往地面靠近，再推起来。身体越竖直越难。'}],
+    steps:['坐在椅子上，背靠稳，双脚踩地。','双手拿哑铃举到肩膀两侧，大约耳朵高度，掌心朝前。','呼气，把哑铃往上推到头顶，手臂接近伸直。','吸气，慢慢放回耳朵高度。'],
+    cues:['收紧肚子，腰不要往前顶','哑铃推到头顶正上方，不要往前推','放下时控制速度'],
+    mistakes:['腰往后仰得厉害','放得太低或太快','耸肩'],
+    breath:'推起呼气，放下吸气',search:'坐姿哑铃推举 教学'},
+  bridge:{name:'臀桥',muscles:'臀部、大腿后侧',equip:'瑜伽垫，可以加哑铃',
+    extra:'太轻时改成单腿臀桥，或者把哑铃压在胯骨上做。',
+    variants:[{anim:'bridge',label:'臀桥'}],
+    steps:['仰卧，屈膝，双脚踩地与髋同宽，脚跟离屁股约一个脚掌远。','双手放在身体两侧。','呼气，脚跟发力把屁股抬起，直到肩、髋、膝成一条直线。','在最高点夹紧屁股停 1–2 秒，再慢慢放下。'],
+    cues:['用脚跟发力','最高点靠夹紧屁股，不是用腰往上顶','肋骨往下收，腰不要拱'],
+    mistakes:['腰拱得太高','脚离屁股太远','动作太快，没有停顿'],
+    breath:'抬起呼气，放下吸气',search:'臀桥 正确做法'},
+  deadbug:{name:'死虫',muscles:'深层腹肌、核心稳定',equip:'瑜伽垫',
+    variants:[{anim:'deadbug',label:'死虫'},{anim:'crunch',label:'卷腹（替代）',note:'仰卧屈膝，双手交叉放在胸前，用肚子的力量把肩膀卷离地面一点，停 1 秒再放下。不是仰卧起坐，不用坐起来。'}],
+    steps:['仰卧，双臂垂直伸向天花板，大腿垂直地面、小腿水平（膝盖弯成 90°）。','腰贴紧垫子，肚子收紧。','呼气，慢慢同时伸直对侧的手和腿（比如右手往头后放、左腿往前伸），都不碰地。','吸气收回，换另一侧。左右各算一次。'],
+    cues:['整个过程腰都贴着地面','越慢越好','腿伸得越低越难，稳不住就伸高一点'],
+    mistakes:['腰离开地面拱起来','动作太快','憋气'],
+    breath:'伸出时呼气，收回时吸气',search:'死虫 核心训练 教学'}
+};
+
+const PLAN = {
+  A:{name:'力量 A',place:'全部在宿舍完成，约 50 分钟',items:[
+    {ex:'squat',sets:4,reps:'10–15',load:true},
+    {ex:'pushup',sets:4,reps:'8–15'},
+    {ex:'row',sets:3,reps:'10–12',each:true,load:true},
+    {ex:'rdl',sets:3,reps:'10–12',load:true},
+    {ex:'plank',sets:3,reps:'30–60',unit:'秒'}]},
+  B:{name:'力量 B',place:'引体向上去操场，其余在宿舍',items:[
+    {ex:'split',sets:3,reps:'8–12',each:true,load:true},
+    {ex:'pullup',sets:4,reps:'尽量多'},
+    {ex:'press',sets:3,reps:'8–12',load:true},
+    {ex:'bridge',sets:3,reps:'12–15',load:true},
+    {ex:'deadbug',sets:3,reps:'12–15'}]}
+};
+// JS getDay(): 0=周日
+const WEEK = [{d:'日',k:'R'},{d:'一',k:'S'},{d:'二',k:'C'},{d:'三',k:'S'},{d:'四',k:'R'},{d:'五',k:'S'},{d:'六',k:'C'}];
+const KIND_NAME = {S:'力量',C:'有氧',R:'休息'};
+const CARDIO_TYPES = ['操场快走','跑走结合','爬楼梯','打球','骑车'];
+const RUNWALK = [
+  ['第 1–2 周','跑 1 分钟 + 走 2 分钟','× 10','30 分钟'],
+  ['第 3–4 周','跑 2 分钟 + 走 2 分钟','× 7','28 分钟'],
+  ['第 5–6 周','跑 3 分钟 + 走 1.5 分钟','× 6','27 分钟'],
+  ['第 7–8 周','跑 5 分钟 + 走 1 分钟','× 5','30 分钟'],
+  ['第 9 周起','连续慢跑','—','20–30 分钟']];
+const PROTEIN_ADD = [{n:'鸡蛋 1 个',g:6},{n:'牛奶 250ml',g:8},{n:'无糖酸奶',g:6},{n:'一份肉/鱼',g:22},{n:'一份豆腐',g:10},{n:'蛋白粉 1 勺',g:22}];
+const HABITS = [{k:'steps',t:'步数 8000+'},{k:'nosugar',t:'没喝奶茶、没吃夜宵'},{k:'veg',t:'每顿两拳蔬菜'},{k:'sleep',t:'睡够 7 小时'}];
+const PROTEIN_GOAL = 130;
+
+/* ---------- stick-figure demos (side view, facing right) ---------- */
+document.head.insertAdjacentHTML('beforeend',`<style>
+.fig .fl{stroke:var(--floor);stroke-width:2}
+.fig .ln{fill:none;stroke:var(--fig);stroke-width:6;stroke-linecap:round;stroke-linejoin:round}
+.fig .lf{fill:none;stroke:var(--fig-far);stroke-width:5.5;stroke-linecap:round;stroke-linejoin:round}
+.fig .hd{fill:var(--fig)}
+.fig .db{fill:var(--prop)} .fig .dbh{fill:var(--surface)} .fig .dbg{stroke:var(--prop);stroke-width:3}
+.fig .furn{fill:var(--surface-2);stroke:var(--line);stroke-width:1.5}
+.fig .mat{fill:var(--track-soft)}
+.fig .gd{stroke:var(--track);stroke-width:1.5;stroke-dasharray:4 4;fill:none}
+.fig .bd{stroke:var(--track);stroke-width:2.5;stroke-dasharray:5 4;fill:none;stroke-linecap:round}
+.fig .rail{stroke:var(--fig-far);stroke-width:3;stroke-linecap:round}
+.fig .bar{fill:var(--prop)}
+</style>`);
+const FL = 170, D2R = Math.PI/180;
+const S = {torso:50, neck:13, ua:27, fa:25, th:42, sh:40};
+const P = (o,a,l)=>[o[0]+Math.cos(a*D2R)*l, o[1]+Math.sin(a*D2R)*l];
+const lerp = (a,b,t)=>a+(b-a)*t;
+const lp = (p,q,t)=>[lerp(p[0],q[0],t), lerp(p[1],q[1],t)];
+const ease = u=>(1-Math.cos(Math.PI*u))/2;
+function rep(tau,up=.35,top=.1,down=.35){const h=(1-up-top-down)/2;if(tau<h)return 0;tau-=h;if(tau<up)return ease(tau/up);tau-=up;if(tau<top)return 1;tau-=top;if(tau<down)return 1-ease(tau/down);return 0;}
+function ik(a,c,l1,l2,s){const dx=c[0]-a[0],dy=c[1]-a[1];let d=Math.hypot(dx,dy);d=Math.max(Math.abs(l1-l2)+.01,Math.min(l1+l2-.01,d));
+  const base=Math.atan2(dy,dx),A=Math.acos(Math.max(-1,Math.min(1,(l1*l1+d*d-l2*l2)/(2*l1*d))));
+  const m=[a[0]+Math.cos(base+s*A)*l1,a[1]+Math.sin(base+s*A)*l1],e=Math.atan2(c[1]-m[1],c[0]-m[0]);
+  return [m,[m[0]+Math.cos(e)*l2,m[1]+Math.sin(e)*l2]];}
+const f1 = n=>n.toFixed(1);
+const C = (p,r,c)=>`<circle class="${c}" cx="${f1(p[0])}" cy="${f1(p[1])}" r="${r}"/>`;
+const R = (x,y,w,h,c,rx=3)=>`<rect class="${c}" x="${f1(x)}" y="${f1(y)}" width="${f1(w)}" height="${f1(h)}" rx="${rx}"/>`;
+const Ln = (a,b,c)=>`<line class="${c}" x1="${f1(a[0])}" y1="${f1(a[1])}" x2="${f1(b[0])}" y2="${f1(b[1])}"/>`;
+const PL = (pts,c)=>`<polyline class="${c}" points="${pts.map(q=>f1(q[0])+','+f1(q[1])).join(' ')}"/>`;
+const dbEnd = h=>C(h,7,'db')+C(h,2.2,'dbh');
+const dbVert = h=>R(h[0]-7,h[1]-15,14,6,'db',2)+R(h[0]-7,h[1]+5,14,6,'db',2)+Ln([h[0],h[1]-9],[h[0],h[1]+5],'dbg');
+const bench = (x1,x2,top)=>R(x1,top,x2-x1,7,'furn',3)+R(x1+6,top+7,5,FL-top-7,'furn',1)+R(x2-11,top+7,5,FL-top-7,'furn',1);
+const chair = (x1,x2,seat,backTop)=>R(x1,seat,x2-x1,6,'furn',2)+R(x1+2,seat+6,4,FL-seat-6,'furn',1)+R(x2-6,seat+6,4,FL-seat-6,'furn',1)+R(x1,backTop,5,seat-backTop,'furn',2);
+const mat = (x1,x2)=>R(x1,FL-3,x2-x1,3,'mat',1);
+const legPts = l=>[l.kn,l.an,l.to];
+
+function squat(t,goblet){const e=rep(t,.36,.08,.36),an=[124,FL-4],to=[137,FL-1];
+  const hp=lp([120,FL-84],[98,FL-44],e),[kn]=ik(hp,an,S.th,S.sh,-1),ta=lerp(-88,-58,e),sh=P(hp,ta,S.torso),hd=P(sh,lerp(-88,-72,e),S.neck);
+  let el,ha,front='';
+  if(goblet){[el,ha]=ik(sh,[sh[0]+15,sh[1]+19],S.ua,S.fa,1);front=dbVert(ha);}
+  else{const a=lerp(80,2,e);el=P(sh,a,S.ua);ha=P(el,a,S.fa);}
+  return {hd,sh,hp,n:{el,ha,kn,an,to},front};}
+function pushup(t,h){const e=rep(t,.4,.08,.36),an=[h?50:40,FL-6],to=[an[0]-3,FL-1];
+  const yTop=FL-h-50,bTop=Math.asin((yTop-an[1])/132),hand=[an[0]+132*Math.cos(bTop)-8,FL-h];
+  const y=lerp(yTop,FL-h-16,e),b=Math.asin((y-an[1])/132),bd=b/D2R,sh=[an[0]+132*Math.cos(b),y];
+  const hp=P(an,bd,82),kn=P(an,bd,40),hd=P(sh,bd-4,S.neck),[el,ha]=ik(sh,hand,S.ua,S.fa,1);
+  return {hd,sh,hp,n:{el,ha,kn,an,to},back:h?bench(hand[0]-12,232,FL-h):''};}
+function row(t){const e=rep(t,.3,.12,.38),hp=[128,FL-84],sh=P(hp,-4,S.torso),hd=P(sh,-2,S.neck);
+  const [fel,fha]=ik(sh,[186,FL-43],S.ua,S.fa,1),fkn=[140,FL-44],fan=[100,FL-46],fto=[93,FL-44];
+  const an=[112,FL-4],to=[124,FL-1],[kn]=ik(hp,an,S.th,S.sh,-1);
+  const [el,ha]=ik(sh,lp([sh[0]+2,sh[1]+50],[sh[0]-22,sh[1]+12],e),S.ua,S.fa,1);
+  return {hd,sh,hp,n:{el,ha,kn,an,to},f:{el:fel,ha:fha,kn:fkn,an:fan,to:fto},back:bench(88,208,FL-42),front:dbEnd(ha)};}
+function rdl(t){const e=rep(t,.38,.08,.38),an=[116,FL-4],to=[129,FL-1];
+  const hp=lp([113,FL-85],[94,FL-79],e),[kn]=ik(hp,an,S.th,S.sh,-1),ta=lerp(-88,-17,e),sh=P(hp,ta,S.torso),hd=P(sh,ta+5*e,S.neck);
+  const a=lerp(92,108,e),el=P(sh,a,S.ua),ha=P(el,a,S.fa);
+  return {hd,sh,hp,n:{el,ha,kn,an,to},front:dbEnd(ha)};}
+function plank(t){const up=q=>[q[0],q[1]-11],an=[58,FL-6],to=[54,FL-1],b=Math.asin(-24/132),bd=b/D2R,br=Math.sin(t*Math.PI*2)*.6;
+  const sh=[an[0]+132*Math.cos(b),FL-30],hp=P(an,bd,82),kn=P(an,bd,40);hp[1]+=br;
+  const el=[sh[0]+1,FL-3],ha=[el[0]+24,FL-3],hd=P(sh,bd-3,S.neck);
+  return {hd,sh,hp,n:{el,ha,kn,an,to},back:mat(36,230),guide:Ln(up(P(an,bd,-10)),up(P(an,bd,150)),'gd')};}
+function split(t){const e=rep(t,.38,.08,.38),an=[152,FL-4],to=[165,FL-1],fan=[70,FL-52],fto=[58,FL-47];
+  const hp=lp([120,FL-79],[112,FL-47],e),[kn]=ik(hp,an,S.th,S.sh,-1),[fkn]=ik(hp,fan,S.th,S.sh,-1);
+  const ta=lerp(-84,-74,e),sh=P(hp,ta,S.torso),hd=P(sh,ta,S.neck),el=P(sh,94,S.ua),ha=P(el,94,S.fa);
+  return {hd,sh,hp,n:{el,ha,kn,an,to},f:{kn:fkn,an:fan,to:fto},back:chair(28,78,FL-44,FL-98)};}
+function pullup(t,neg){const e=neg?rep(t,.12,.1,.6):rep(t,.3,.12,.35),bar=[120,24];
+  const sh=lp([117,74],[109,33],e),[el,ha]=ik(sh,bar,S.ua,S.fa,1),hp=P(sh,lerp(96,100,e),S.torso),hd=P(sh,lerp(-86,-80,e),S.neck);
+  const kn=P(hp,98,S.th),an=P(kn,112,S.sh),to=P(an,75,11);
+  return {hd,sh,hp,n:{el,ha,kn,an,to},back:Ln(bar,[208,24],'rail')+Ln([208,24],[208,FL],'rail'),front:C(bar,4,'bar')};}
+function invrow(t){const e=rep(t,.33,.12,.35),an=[44,FL-6],to=[47,FL-17],bar=[178,FL-80];
+  const bd=lerp(-10,-27,e),sh=P(an,bd,132),hp=P(an,bd,82),kn=P(an,bd,40),hd=P(sh,bd,S.neck),[el,ha]=ik(sh,bar,S.ua,S.fa,1);
+  return {hd,sh,hp,n:{el,ha,kn,an,to},back:Ln(bar,[192,FL-80],'rail')+Ln([192,FL-80],[192,FL],'rail'),front:C(bar,4,'bar')};}
+function press(t){const e=rep(t,.33,.1,.38),hp=[102,FL-49],sh=[102,FL-99],hd=[103,FL-112];
+  const kn=[144,FL-49],an=[146,FL-9],to=[158,FL-3],[el,ha]=ik(sh,lp([sh[0]+7,sh[1]-4],[sh[0]+2,sh[1]-51],e),S.ua,S.fa,1);
+  return {hd,sh,hp,n:{el,ha,kn,an,to},back:chair(80,130,FL-44,FL-106),front:dbEnd(ha)};}
+function pike(t){const e=rep(t,.38,.08,.38),an=[70,FL-8],to=[78,FL-1],hand=[150,FL-2];
+  const sh=lp([146,FL-48],[160,FL-24],e),dir=lerp(40,52,e),hp=P(sh,dir+180,S.torso),[kn]=ik(hp,an,S.th,S.sh,-1);
+  const hd=P(sh,dir,S.neck),[el,ha]=ik(sh,hand,S.ua,S.fa,1);
+  return {hd,sh,hp,n:{el,ha,kn,an,to},back:mat(50,220)};}
+function bridge(t){const e=rep(t,.33,.15,.35),sh=[60,FL-7],hd=[46,FL-9],an=[150,FL-6],to=[161,FL-2];
+  const hp=P(sh,lerp(-3,-22,e),S.torso),[kn]=ik(hp,an,S.th,S.sh,-1);
+  return {hd,sh,hp,n:{el:[86,FL-4],ha:[110,FL-3],kn,an,to},back:mat(30,190)};}
+function deadbug(t){const first=t<.5,e=rep((t*2)%1,.4,.15,.4),hd=[42,FL-12],sh=[56,FL-9],hp=[106,FL-9];
+  const arm=x=>{const a=lerp(-90,-168,x),el=P(sh,a,S.ua);return {el,ha:P(el,a,S.fa)};};
+  const leg=x=>{const ta=lerp(-90,-12,x),sa=lerp(0,-12,x),kn=P(hp,ta,S.th),an=P(kn,sa,S.sh);return {kn,an,to:P(an,sa-80,11)};};
+  const nA=arm(first?e:0),fA=arm(first?0:e),nL=leg(first?0:e),fL=leg(first?e:0);
+  return {hd,sh,hp,n:{...nA,...nL},f:{...fA,...fL},back:mat(26,200)};}
+function crunch(t){const e=rep(t,.33,.15,.35),hp=[108,FL-9],an=[152,FL-6],to=[163,FL-2],[kn]=ik(hp,an,S.th,S.sh,-1);
+  const a=lerp(178,206,e),sh=P(hp,a,S.torso),hd=P(sh,a+lerp(4,16,e),S.neck),el=P(P(sh,a-180,20),a-270,7),ha=P(P(sh,a-180,5),a-270,10);
+  return {hd,sh,hp,n:{el,ha,kn,an,to},back:mat(26,200)};}
+function bandrow(t){const e=rep(t,.33,.12,.38),hp=[92,FL-8],kn=[134,FL-7],an=[174,FL-6],to=[180,FL-17],anchor=[181,FL-12];
+  const ta=lerp(-74,-90,e),sh=P(hp,ta,S.torso),hd=P(sh,ta,S.neck),[el,ha]=ik(sh,lp([sh[0]+47,sh[1]+14],[sh[0]+6,sh[1]+26],e),S.ua,S.fa,1);
+  return {hd,sh,hp,n:{el,ha,kn,an,to},back:mat(60,200),front:Ln(anchor,ha,'bd')};}
+
+const ANIM = {goblet:t=>squat(t,true),bwsquat:t=>squat(t,false),pushup:t=>pushup(t,0),incline:t=>pushup(t,40),row,bandrow,rdl,plank,split,
+  pullup:t=>pullup(t,false),negative:t=>pullup(t,true),invrow,press,pike,bridge,deadbug,crunch};
+const PERIOD = {deadbug:6400,negative:5200,plank:4000,pullup:3400,invrow:3200};
+const CAPTION = {goblet:'下蹲吸气 · 站起呼气',bwsquat:'双臂前举保持平衡',pushup:'身体保持一条直线',incline:'手撑床沿，越高越简单',row:'手肘往腰的方向拉',
+  bandrow:'弹力带绕过脚底',rdl:'屁股往后推，背始终挺直',plank:'虚线：头到脚跟一条直线',split:'后脚搭在椅子上',pullup:'先沉肩，再把下巴拉过杠',
+  negative:'快速到顶，用 3–5 秒慢慢放下',invrow:'身体绷直，胸口拉向杠',press:'推到头顶正上方',pike:'倒 V 字，头顶向地面靠近',
+  bridge:'最高点肩、髋、膝成一条线',deadbug:'对侧手脚同时伸出，腰贴地',crunch:'只卷起肩膀，不用坐起来'};
+
+function frameSVG(p){let s=Ln([4,FL],[236,FL],'fl')+(p.back||'')+(p.guide||'');
+  if(p.f){if(p.f.ha)s+=PL([p.sh,p.f.el,p.f.ha],'lf');if(p.f.an)s+=PL([p.hp,...legPts(p.f)],'lf');}
+  s+=PL([p.hp,p.sh,p.hd],'ln')+C(p.hd,9,'hd')+PL([p.hp,...legPts(p.n)],'ln')+PL([p.sh,p.n.el,p.n.ha],'ln')+(p.front||'');
+  return s;}
+
+const Player = {raf:0,key:null,g:null,t0:0,playing:true,
+  mount(g,key){this.stop();this.g=g;this.key=key;this.t0=performance.now();
+    const reduce=matchMedia('(prefers-reduced-motion: reduce)').matches;this.playing=!reduce;
+    if(reduce){this.draw(.5);}else this.loop();return this.playing;},
+  draw(tau){if(this.g)this.g.innerHTML=frameSVG(ANIM[this.key](tau));},
+  loop(){const per=PERIOD[this.key]||3200;const step=now=>{this.draw(((now-this.t0)%per)/per);this.raf=requestAnimationFrame(step);};this.raf=requestAnimationFrame(step);},
+  toggle(){if(this.playing){cancelAnimationFrame(this.raf);this.playing=false;}else{this.playing=true;this.t0=performance.now();this.loop();}return this.playing;},
+  stop(){cancelAnimationFrame(this.raf);this.raf=0;this.g=null;}
+};
+
+/* ---------- dates ---------- */
+const pad = n=>String(n).padStart(2,'0');
+const ymd = d=>`${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`;
+const today = ()=>ymd(new Date());
+const parseYmd = s=>{const [y,m,d]=s.split('-').map(Number);return new Date(y,m-1,d);};
+const addDays = (s,n)=>{const d=parseYmd(s);d.setDate(d.getDate()+n);return ymd(d);};
+const WD = ['日','一','二','三','四','五','六'];
+const mdText = s=>{const d=parseYmd(s);return `${d.getMonth()+1}月${d.getDate()}日`;};
+const esc = s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const clone = o=>JSON.parse(JSON.stringify(o||{}));
+const lsGet = k=>{try{return localStorage.getItem(k);}catch(e){return null;}};
+const lsSet = (k,v)=>{try{localStorage.setItem(k,v);}catch(e){}};
+const isStandalone = ()=>window.navigator.standalone===true||matchMedia('(display-mode: standalone)').matches;
+
+/* ---------- storage: claude.ai db when available, this device otherwise ---------- */
+const COLS = ['body','sessions','days'];
+function setSync(state){
+  const dot=document.getElementById('syncDot'),txt=document.getElementById('syncText');
+  const map={local:['on','数据存在这台手机上'],ok:['on','已同步到账号'],loading:['','正在读取…'],slow:['','网络慢，稍后同步'],err:['','保存失败，稍后重试']};
+  const [cls,label]=map[state]||map.loading;dot.className='sync '+cls;txt.textContent=label;}
+const Store = {
+  mode:'local',db:null,data:{body:{},sessions:{},days:{}},unsynced:new Set(),timers:{},writing:{},again:{},confirmed:new Set(),fns:new Set(),
+  on(fn){this.fns.add(fn);}, emit(){this.fns.forEach(f=>f());},
+  loadLocal(){try{const j=JSON.parse(lsGet('t78-data')||'null');if(j)COLS.forEach(c=>{this.data[c]=j[c]||{};});}catch(e){}},
+  saveLocal(){lsSet('t78-data',JSON.stringify(this.data));},
+  async init(){
+    let db=null;
+    try{if(navigator.storage&&navigator.storage.persist)navigator.storage.persist();}catch(e){}
+    if(!db){this.mode='local';this.loadLocal();setSync('local');this.emit();return;}
+    this.db=db;this.mode='db';setSync('loading');
+    const slow=setTimeout(()=>{if(this.confirmed.size<COLS.length)setSync('slow');},10000);
+    COLS.forEach(col=>{
+      db.collection(col).onSnapshot(snap=>{
+        const m={};snap.docs.forEach(d=>{if(d.exists)m[d.id]=d.data();});
+        this.unsynced.forEach(k=>{const [c,id]=k.split('/');if(c===col){if(this.data[col][id]===undefined)delete m[id];else m[id]=this.data[col][id];}});
+        this.data[col]=m;
+        if(!snap.metadata.fromCache){this.confirmed.add(col);if(this.confirmed.size===COLS.length){clearTimeout(slow);setSync('ok');}}
+        this.emit();
+      },err=>{clearTimeout(slow);setSync('err');console.warn('db',col,err&&err.code);});
+    });
+  },
+  get(col,id){return this.data[col][id];},
+  put(col,id,obj,silent){this.data[col]={...this.data[col],[id]:obj};if(!silent)this.emit();this.persist(col,id);},
+  del(col,id){const m={...this.data[col]};delete m[id];this.data[col]=m;this.emit();this.persist(col,id);},
+  persist(col,id){
+    if(this.mode!=='db'){this.saveLocal();return;}
+    const k=col+'/'+id;this.unsynced.add(k);clearTimeout(this.timers[k]);this.timers[k]=setTimeout(()=>this.flush(col,id),500);},
+  async flush(col,id){
+    const k=col+'/'+id;if(this.writing[k]){this.again[k]=true;return;}
+    this.writing[k]=true;this.again[k]=false;
+    try{const v=this.data[col][id],ref=this.db.collection(col).doc(id);
+      if(v===undefined)await ref.delete();else await ref.set(clone(v));
+      if(!this.again[k])this.unsynced.delete(k);setSync('ok');}
+    catch(e){if(e&&(e.code==='unavailable'||e.code==='resource_exhausted')){setSync('slow');setTimeout(()=>this.flush(col,id),1500+Math.random()*1500);}
+      else{setSync('err');console.warn('write',k,e&&e.code);}}
+    finally{this.writing[k]=false;if(this.again[k]){this.again[k]=false;this.flush(col,id);}}
+  }
+};
+
+/* ---------- rest timer + screen wake ---------- */
+const Timer = {end:0,int:0,label:'',ac:null,
+  start(sec,label){this.end=Date.now()+sec*1000;this.label=label;const el=document.getElementById('timer');el.hidden=false;el.classList.remove('over');
+    clearInterval(this.int);this.tick();this.int=setInterval(()=>this.tick(),250);},
+  add(sec){this.end=Math.max(this.end,Date.now())+sec*1000;document.getElementById('timer').classList.remove('over');clearInterval(this.int);this.int=setInterval(()=>this.tick(),250);this.tick();},
+  tick(){const left=Math.ceil((this.end-Date.now())/1000),el=document.getElementById('timer');
+    if(left<=0){clearInterval(this.int);el.classList.add('over');document.getElementById('timerT').textContent='0:00';document.getElementById('timerL').textContent='休息结束，开始下一组';this.beep();setTimeout(()=>{if(el.classList.contains('over'))el.hidden=true;},6000);return;}
+    document.getElementById('timerT').textContent=`${Math.floor(left/60)}:${pad(left%60)}`;document.getElementById('timerL').textContent=this.label;},
+  stop(){clearInterval(this.int);document.getElementById('timer').hidden=true;},
+  unlock(){try{if(!this.ac){const A=window.AudioContext||window.webkitAudioContext;if(A)this.ac=new A();}if(this.ac&&this.ac.state==='suspended')this.ac.resume();}catch(e){}},
+  beep(){try{const ac=this.ac;if(!ac)return;[0,.22].forEach(d=>{const o=ac.createOscillator(),g=ac.createGain();o.frequency.value=880;g.gain.setValueAtTime(.0001,ac.currentTime+d);g.gain.exponentialRampToValueAtTime(.25,ac.currentTime+d+.02);g.gain.exponentialRampToValueAtTime(.0001,ac.currentTime+d+.18);o.connect(g).connect(ac.destination);o.start(ac.currentTime+d);o.stop(ac.currentTime+d+.2);});}catch(e){}}
+};
+const Wake = {lock:null,want:false,
+  async on(){this.want=true;try{if('wakeLock' in navigator)this.lock=await navigator.wakeLock.request('screen');}catch(e){this.lock=null;}},
+  off(){this.want=false;try{this.lock&&this.lock.release();}catch(e){}this.lock=null;}};
+document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible'&&Wake.want)Wake.on();});
+
+/* ---------- plan logic ---------- */
+const UI = {tab:'today',override:null,workout:false,sheet:null};
+const started = s=>!!s&&(s.done||Object.values(s.sets||{}).some(a=>a.some(x=>x&&x.ok)));
+function firstDate(){let m=null;COLS.forEach(c=>Object.keys(Store.data[c]).forEach(k=>{const d=k.slice(0,10);if(/^\d{4}-\d\d-\d\d$/.test(d)&&(!m||d<m))m=d;}));return m;}
+function weekNo(){const f=firstDate();if(!f)return 1;return Math.floor((parseYmd(today())-parseYmd(f))/864e5/7)+1;}
+function lastStrength(before){let best=null;Object.values(Store.data.sessions).forEach(s=>{if((s.type==='A'||s.type==='B')&&s.date<before&&started(s)&&(!best||s.date>best.date))best=s;});return best;}
+function lastSetsFor(type,ex,before){let best=null;Object.values(Store.data.sessions).forEach(s=>{if(s.type===type&&s.date<before&&s.sets&&s.sets[ex]&&s.sets[ex].some(x=>x&&x.ok)&&(!best||s.date>best.date))best=s;});return best?best.sets[ex]:null;}
+function todayKind(){
+  const d=today(),ss=Store.data.sessions;
+  if(UI.override)return UI.override;
+  if(started(ss[d+'_A']))return 'A';if(started(ss[d+'_B']))return 'B';if(ss[d+'_C']&&ss[d+'_C'].done)return 'C';
+  const k=WEEK[new Date().getDay()].k;
+  if(k==='S'){const l=lastStrength(d);return l&&l.type==='A'?'B':'A';}
+  return k;}
+function rxText(it){return it.reps==='尽量多'?`${it.sets} 组 · 尽量多`:`${it.sets} × ${it.reps}${it.unit||''}${it.each?' 每侧':''}`;}
+function restFor(ex){return ex==='plank'?60:ex==='pullup'?120:90;}
+function fmtSets(arr,it){return arr.filter(x=>x&&x.ok).map(x=>(it.load&&x.kg?x.kg+'kg×':'')+(x.r??'?')).join(' · ');}
+
+/* ---------- TODAY ---------- */
+function renderToday(){
+  const d=today(),kind=todayKind(),v=document.getElementById('v-today');
+  const wd=WD[new Date().getDay()];
+  let h='';
+  if(!lsGet('t78-hint')&&!isStandalone())h+=`<div class="card"><h3>放到 iPhone 主屏幕<button class="linkbtn" data-act="hint-off">知道了</button></h3>
+    <p class="small muted">用 Safari 打开这个页面 → 点底部的「分享」按钮 → 选「添加到主屏幕」。之后从桌面点开，没网也能用。注意：记录只存在主屏幕这个 App 里，和 Safari 里打开的不互通。</p></div>`;
+  const title=kind==='A'||kind==='B'?PLAN[kind].name:kind==='C'?'有氧':'休息日';
+  const meta=kind==='A'||kind==='B'?PLAN[kind].place:kind==='C'?'操场 30–40 分钟，微喘但能说完整的话':'散步、拉伸，让肌肉恢复';
+  h+=`<div class="field"><div class="eyebrow">今天 · 周${wd} · 第 ${weekNo()} 周</div><h2>${title}</h2><div class="meta">${meta}</div>
+    <div class="switch" role="group" aria-label="换一种训练">${[['A','力量 A'],['B','力量 B'],['C','有氧'],['R','休息']].map(([k,l])=>`<button type="button" data-act="kind" data-k="${k}" aria-pressed="${k===kind}">${l}</button>`).join('')}</div></div>`;
+  if(kind==='A'||kind==='B')h+=strengthBlock(kind,d);
+  else if(kind==='C')h+=cardioBlock(d);
+  else h+=`<div class="card"><h3>今天休息</h3><p>散步 30 分钟，睡前拉伸 10 分钟就够了。肌肉是在休息的时候长出来的，别连着练。</p><div class="note">明天的安排：<b>${(()=>{const k=WEEK[(new Date().getDay()+1)%7].k;return KIND_NAME[k];})()}</b></div></div>`;
+  h+=habitsBlock(d)+proteinBlock(d)+weightQuick(d);
+  v.innerHTML=h;}
+
+function strengthBlock(kind,d){
+  const id=d+'_'+kind,s=Store.get('sessions',id),plan=PLAN[kind];
+  if(s&&s.done&&!UI.workout){
+    const n=Object.values(s.sets||{}).reduce((a,arr)=>a+arr.filter(x=>x&&x.ok).length,0);
+    return `<div class="goodbox"><b>今天的${plan.name}完成了 ✓</b> 一共 ${n} 组。记得吃一顿有肉的正餐。</div>
+      <div class="card"><h3>今天的记录</h3>${plan.items.map(it=>{const arr=(s.sets||{})[it.ex]||[];return `<div class="small"><b>${EX[it.ex].name}</b>　<span class="num">${fmtSets(arr,it)||'—'}</span></div>`;}).join('')}
+      <button class="btn ghost sm" data-act="reopen" data-k="${kind}">继续修改</button></div>`;}
+  if(!UI.workout&&!started(s)){
+    return `<div class="card"><h3>今天练这 5 个动作<span class="tag">点动作看怎么做</span></h3><div class="exlist">${plan.items.map((it,i)=>exRow(it,i)).join('')}</div>
+      <div class="note"><b>先热身 5–10 分钟：</b>原地快走 2 分钟，转转肩膀和髋，第一个动作先用轻重量做一组。</div>
+      <button class="btn primary block" data-act="start" data-k="${kind}">开始训练</button></div>`;}
+  return plan.items.map((it,i)=>logEx(kind,id,s,it,i,d)).join('')+
+    `<button class="btn primary block" data-act="finish" data-k="${kind}">完成训练</button><p class="small muted" style="text-align:center">每勾一组会自动保存，并开始组间休息倒计时。</p>`;}
+
+function exRow(it,i){const ex=EX[it.ex];
+  return `<button type="button" class="exrow" data-act="ex" data-ex="${it.ex}" data-rx="${esc(rxText(it))}"><span class="idx">${i+1}</span>
+    <span><span class="nm">${ex.name}</span><br><span class="sub">${ex.muscles}</span></span>
+    <span style="text-align:right"><span class="rx">${rxText(it)}</span><br><span class="how">看动作 ›</span></span></button>`;}
+
+function logEx(kind,id,s,it,i,d){
+  const ex=EX[it.ex],arr=(s&&s.sets&&s.sets[it.ex])||[],last=lastSetsFor(kind,it.ex,d);
+  const done=arr.filter(x=>x&&x.ok).length>=it.sets,unit=it.unit==='秒'?'秒':'次';
+  let rows='';
+  for(let n=0;n<it.sets;n++){const x=arr[n]||{},lx=(last&&last[n])||{};
+    const kgPh=lx.kg??'',rPh=lx.r??(it.reps==='尽量多'?'':String(it.reps).split('–')[0]);
+    rows+=`<div class="setrow${it.load?'':' noload'}"><span class="sn">${n+1}</span>
+      ${it.load?`<label class="field-in"><input id="kg-${id}-${it.ex}-${n}" inputmode="decimal" type="text" placeholder="${esc(kgPh)}" value="${esc(x.kg??'')}" data-act="in" data-f="kg" data-id="${id}" data-ex="${it.ex}" data-n="${n}" aria-label="第${n+1}组重量"><span>kg</span></label>`:''}
+      <label class="field-in"><input id="r-${id}-${it.ex}-${n}" inputmode="numeric" type="text" placeholder="${esc(rPh)}" value="${esc(x.r??'')}" data-act="in" data-f="r" data-id="${id}" data-ex="${it.ex}" data-n="${n}" aria-label="第${n+1}组${unit}数"><span>${unit}</span></label>
+      <button type="button" class="tick" aria-pressed="${!!x.ok}" aria-label="第${n+1}组完成" data-act="tick" data-id="${id}" data-ex="${it.ex}" data-n="${n}" data-k="${kind}">✓</button></div>`;}
+  return `<div class="logex${done?' done':''}"><div class="loghead"><div><button class="linkbtn" style="color:var(--ink);font-size:16px" data-act="ex" data-ex="${it.ex}" data-rx="${esc(rxText(it))}">${i+1}. ${ex.name} <span style="color:var(--track);font-size:13px">动作 ›</span></button>
+    <div class="last">${last?'上次：<span class="num">'+esc(fmtSets(last,it))+'</span>':'第一次做：先用轻重量把动作做标准'}</div></div><div class="rx">${rxText(it)}</div></div>
+    <div class="sets">${rows}</div></div>`;}
+
+function cardioBlock(d){const id=d+'_C',s=Store.get('sessions',id)||{},type=s.kind||'跑走结合';
+  return `<div class="card"><h3>做哪种有氧</h3><div class="chips">${CARDIO_TYPES.map(t=>`<button type="button" class="chip" data-act="ctype" data-t="${t}" aria-pressed="${t===type}">${t}</button>`).join('')}</div>
+    <div class="inrow" style="grid-template-columns:1fr auto"><label>时长（分钟）<span class="field-in"><input id="cmin" inputmode="numeric" type="text" value="${esc(s.min??'')}" placeholder="30" data-act="cmin"><span>分钟</span></span></label>
+    <button class="btn ${s.done?'ghost':'primary'}" data-act="cdone">${s.done?'已完成 ✓':'完成'}</button></div>
+    <div class="note"><b>跑走结合怎么进阶：</b>${RUNWALK.map(r=>`${r[0]} ${r[1]}${r[2]!=='—'?' '+r[2]:''}`).join('；')}。膝盖或小腿疼就退回上一阶段。</div></div>`;}
+
+function habitsBlock(d){const day=Store.get('days',d)||{},hb=day.habits||{};
+  return `<div class="card"><h3>今日打卡<span class="tag">${HABITS.filter(x=>hb[x.k]).length}/${HABITS.length}</span></h3><div class="chips">${HABITS.map(x=>`<button type="button" class="chip" data-act="habit" data-k="${x.k}" aria-pressed="${!!hb[x.k]}">${x.t}</button>`).join('')}</div></div>`;}
+
+function proteinBlock(d){const day=Store.get('days',d)||{},g=day.protein||0,pct=Math.min(100,Math.round(g/PROTEIN_GOAL*100));
+  return `<div class="card"><h3>今天的蛋白质<span class="tag">目标 120–140g</span></h3>
+    <div class="protein"><span class="big num">${g}</span><span class="muted">/ ${PROTEIN_GOAL} g</span><span style="flex:1"></span>${(day.plog||[]).length?'<button class="linkbtn" data-act="p-undo">撤销上一次</button>':''}</div>
+    <div class="bar"><i style="width:${pct}%"></i></div>
+    <div class="addgrid">${PROTEIN_ADD.map((p,i)=>`<button type="button" data-act="p-add" data-i="${i}"><b>+${p.g}</b>${p.n}</button>`).join('')}</div></div>`;}
+
+function weightQuick(d){const b=Store.get('body',d),avg=avgWindow(0);
+  if(b)return `<div class="card"><h3>今天的体重<button class="linkbtn" data-act="tab" data-tab="log">去记录页 ›</button></h3><p><span class="num" style="font-size:28px;font-weight:700">${b.w}</span> kg${avg?`　<span class="muted small">7 天平均 ${avg.toFixed(1)} kg</span>`:''}</p></div>`;
+  return `<div class="card"><h3>记一下今天的体重</h3><p class="small muted">早上空腹、上完厕所后称。看的是一周平均值，单天波动别在意。</p>
+    <div class="inrow" style="grid-template-columns:1fr auto"><span class="field-in"><input id="wq" inputmode="decimal" type="text" placeholder="例如 77.6" aria-label="体重"><span>kg</span></span><button class="btn primary" data-act="wq-save">保存</button></div></div>`;}
+
+/* ---------- TRAIN ---------- */
+const DUMBBELL_SVG = `<svg viewBox="0 0 300 92" class="chart" role="img" aria-label="可调节哑铃结构：中间是把手，两边是配重片，最外侧是螺母">
+  <rect x="40" y="40" width="220" height="12" rx="6" fill="var(--fig-far)"/>
+  <rect x="112" y="37" width="76" height="18" rx="7" fill="var(--prop)"/>
+  ${[52,64,76].map(x=>`<rect x="${x}" y="14" width="10" height="64" rx="3" fill="var(--prop)"/>`).join('')}
+  ${[214,226,238].map(x=>`<rect x="${x}" y="14" width="10" height="64" rx="3" fill="var(--prop)"/>`).join('')}
+  <rect x="88" y="30" width="14" height="32" rx="4" fill="var(--track)"/><rect x="198" y="30" width="14" height="32" rx="4" fill="var(--track)"/>
+  <rect x="34" y="34" width="12" height="24" rx="3" fill="var(--track)"/><rect x="254" y="34" width="12" height="24" rx="3" fill="var(--track)"/>
+  <text x="150" y="88" text-anchor="middle">把手</text><text x="70" y="10" text-anchor="middle">配重片</text><text x="40" y="76" text-anchor="middle">螺母</text><text x="95" y="76" text-anchor="middle">卡扣</text>
+</svg>`;
+
+function renderTrain(){
+  const dow=new Date().getDay(),v=document.getElementById('v-train');
+  const order=[1,2,3,4,5,6,0];
+  let h=`<div class="card"><h3>每周安排</h3><div class="week">${order.map(i=>{const k=WEEK[i].k;return `<div class="day${i===dow?' today':''}${k==='S'?' s':''}"><b>周${WEEK[i].d}</b>${KIND_NAME[k]}</div>`;}).join('')}</div>
+    <p class="small muted">力量 A、B 轮着练：这周一 A、三 B、五 A，下周 B、A、B。「今天」页会按你上次练的自动排，也可以手动切换。</p></div>`;
+  ['A','B'].forEach(k=>{const p=PLAN[k];h+=`<div class="card"><h3>${p.name}<span class="tag">${p.place}</span></h3><div class="exlist">${p.items.map((it,i)=>exRow(it,i)).join('')}</div></div>`;});
+  h+=`<div class="card"><h3>有氧<span class="tag">每周 2 次 + 每天 8000 步</span></h3>
+    <p>操场快走或跑走结合，每次 30–40 分钟，微喘但还能说完整的句子。</p>
+    <div class="scroll-x"><table class="tbl"><thead><tr><th>阶段</th><th>怎么跑</th><th>次数</th><th>总时长</th></tr></thead><tbody>${RUNWALK.map(r=>`<tr><td>${r[0]}</td><td>${r[1]}</td><td class="num">${r[2]}</td><td class="num">${r[3]}</td></tr>`).join('')}</tbody></table></div>
+    <p class="small muted">穿跑鞋，在塑胶跑道上跑；膝盖或小腿疼就退回上一阶段。天冷或下雨：爬楼梯 15–20 分钟，或者去打球。</p></div>`;
+  h+=`<div class="card"><h3>怎么才会进步</h3><ul class="olist">
+    <li>每组做到「再做 1–3 个就做不动了」为止，组间休息 1–2 分钟</li>
+    <li>所有组都能做到次数上限（比如深蹲 4 组都做满 15 个），下次就加难度</li>
+    <li>加难度的顺序：加哑铃重量 → 做慢一点（下放数 3 秒）→ 换更难的做法 → 多做一组</li>
+    <li>第一次练时测一下俯卧撑、引体向上最多能做几个，一个月后再测</li></ul></div>`;
+  h+=`<div class="card"><h3>热身和拉伸</h3><p><b>练前热身 5–10 分钟</b></p><ul class="list small"><li>原地快走或高抬腿走 2 分钟</li><li>手臂前后绕环各 10 次，髋关节绕环左右各 10 次</li><li>徒手深蹲 10 个</li><li>第一个动作先用轻重量做 1 组</li></ul>
+    <p><b>练后拉伸</b>：大腿前侧、大腿后侧、臀部、胸、背各拉 30 秒，慢慢呼吸，不要弹震。</p></div>`;
+  h+=`<div class="sec-title">器材怎么用</div>
+  <div class="card"><h3>可调节哑铃<span class="tag">建议每只能加到 15–20kg</span></h3>${DUMBBELL_SVG}
+    <ol class="steps"><li>先把卡扣或螺母拧下来。</li><li>两边装<b>一样重</b>的配重片，大片在里、小片在外。</li><li>把卡扣或螺母<b>拧到拧不动</b>为止。</li><li>每组开始前拿起来轻轻晃一下，确认片子不松动。</li></ol>
+    <div class="warnbox">片子松了会滑出来砸脚。举过头顶的动作（推举）每组前都要检查一遍。放下哑铃时先蹲下，轻轻放在垫子上。</div>
+    <p class="small"><b>重量怎么选：</b>能标准地做到次数上限还能多做 3 个以上，就太轻了；连次数下限都做不到，就太重了。起始参考：高脚杯深蹲 8–12kg，划船 8–10kg，罗马尼亚硬拉每只 8–12kg，推举每只 5–8kg。</p></div>
+  <div class="card"><h3>弹力带</h3><ul class="olist"><li>划船时绕过脚底，或者绕在<b>固定的金属床腿</b>上，不要绑在门把手上</li><li>用前检查有没有裂口，有裂口就换</li><li>不要对着脸的方向拉，回放时也要慢，别突然松手</li><li>想要更难：换更粗的带子，或者手握得更靠近固定点</li></ul></div>
+  <div class="card"><h3>操场单杠</h3><ul class="olist"><li>正手握（掌心朝前），比肩稍宽，<b>大拇指绕过杠</b>握紧</li><li>先检查单杠稳不稳，下雨或结霜时杠很滑，可以戴防滑手套</li><li>结束时慢慢放下到手臂伸直再松手，别从顶端直接跳下来</li><li>宿舍门框不一定承重，不建议装门框单杠</li></ul></div>
+  <div class="card"><h3>瑜伽垫和书包</h3><ul class="olist"><li>垫子防滑的一面朝下，放在床边空地，2m × 1m 就够</li><li>书包装书或矿泉水当负重：背在背上做俯卧撑，抱在胸前做深蹲，背带要收紧</li><li>在宿舍别做跳的动作，免得吵到楼下</li></ul></div>`;
+  v.innerHTML=h;}
+
+/* ---------- FOOD ---------- */
+function renderFood(){
+  const v=document.getElementById('v-food');
+  v.innerHTML=`<div class="field"><div class="eyebrow">减脂期每天</div><h2>约 1900–2000 大卡</h2><div class="meta">保持体重大约要 2300–2400 大卡，每天少吃 300–500</div></div>
+  <div class="stats"><div class="stat"><div class="k">蛋白质</div><div class="v">120–140<small>g</small></div></div><div class="stat"><div class="k">碳水</div><div class="v">~200<small>g</small></div></div><div class="stat"><div class="k">脂肪</div><div class="v">~60<small>g</small></div></div></div>
+  <div class="card"><h3>每顿照这个搭</h3>
+    <div class="scroll-x"><table class="tbl"><tbody>
+      <tr><td><b>一份荤菜</b></td><td>肉多的：清蒸鱼、卤鸡腿（去皮）、卤牛肉、白切鸡、虾、肉片或鸡丁多的炒菜</td></tr>
+      <tr><td><b>一份豆腐或蛋</b></td><td>豆腐、蒸蛋、番茄炒蛋、香干</td></tr>
+      <tr><td><b>一两份素菜</b></td><td>清炒青菜、白灼青菜、凉拌菜</td></tr>
+      <tr><td><b>一拳头米饭</b></td><td>约 150–200g 熟饭，晚饭可以少一点；训练日别省</td></tr></tbody></table></div></div>
+  <div class="card"><h3>早餐</h3><ul class="olist"><li>2–3 个煮鸡蛋 + 无糖豆浆或牛奶</li><li>一个玉米、红薯或杂粮馒头（也可以换成一个肉包）</li></ul>
+    <ul class="xlist"><li>油条、油饼、加薄脆的煎饼果子</li><li>糯米烧麦、炒面炒粉、甜面包</li></ul></div>
+  <div class="card"><h3>尽量别点</h3><p>红烧肉、炸鸡排、糖醋里脊、锅包肉、干锅、地三鲜、鱼香茄子、麻辣香锅、炒饭炒面、盖浇饭</p>
+    <p class="small muted">面条：多加肉和青菜，面少要一点，汤不喝。麻辣烫：选清汤，多拿蔬菜、肉片、豆腐、鸡蛋，少拿丸子、午餐肉、宽粉、方便面。</p></div>
+  <div class="card"><h3>小技巧</h3><ul class="olist"><li>打菜时说「不要汤汁」，特别油的菜在清汤里涮一下</li><li>先吃菜和肉，最后吃饭，更容易饱</li><li>固定几个常去的窗口和几种搭配，就不用每顿纠结</li><li>奶茶、果汁换成无糖茶、黑咖啡；一杯全糖奶茶常常有四五百大卡</li><li>熬夜饿了：牛奶、鸡蛋或无糖酸奶，别吃泡面烧烤</li><li>坚果每天一小把就够，多了热量很高</li></ul></div>
+  <div class="card"><h3>一天的例子<span class="tag">热量是大概估的</span></h3><div class="scroll-x"><table class="tbl"><thead><tr><th>时间</th><th>吃什么</th><th style="text-align:right">大卡</th></tr></thead><tbody>
+    <tr><td>早餐</td><td>2–3 个鸡蛋 + 无糖豆浆 + 一根玉米</td><td class="n">400</td></tr>
+    <tr><td>午饭</td><td>一拳米饭 + 卤鸡腿（去皮）+ 番茄炒蛋 + 清炒青菜</td><td class="n">700</td></tr>
+    <tr><td>加餐</td><td>一个苹果或香蕉 + 一盒无糖酸奶</td><td class="n">200</td></tr>
+    <tr><td>晚饭</td><td>比一拳略少的米饭 + 清蒸鱼或牛肉片 + 豆腐 + 两份青菜</td><td class="n">600</td></tr>
+    <tr><td>练后</td><td>一杯牛奶，或一勺蛋白粉</td><td class="n">150</td></tr>
+    <tr><td><b>合计</b></td><td></td><td class="n"><b>约 2000</b></td></tr></tbody></table></div></div>
+  <div class="card"><h3>蛋白质速查</h3><div class="scroll-x"><table class="tbl"><tbody>${PROTEIN_ADD.map(p=>`<tr><td>${p.n}</td><td class="n">约 ${p.g}g</td></tr>`).join('')}</tbody></table></div>
+    <div class="note">食堂荤菜里的肉通常不多，只靠三顿饭一天大概 100g 出头。最省事的补法：每天一勺蛋白粉，或在超市买即食鸡胸肉、卤牛肉当加餐。在「今天」页可以随手记。</div></div>`;}
+
+/* ---------- LOG ---------- */
+const bodyList = ()=>Object.values(Store.data.body).filter(b=>b&&typeof b.w==='number'&&b.d).sort((a,b)=>a.d<b.d?-1:1);
+function avgWindow(k){const end=addDays(today(),-7*k),start=addDays(end,-6),xs=bodyList().filter(b=>b.d>=start&&b.d<=end).map(b=>b.w);return xs.length>=3?xs.reduce((a,b)=>a+b,0)/xs.length:null;}
+function advice(){const n=bodyList().length,w0=avgWindow(0),w1=avgWindow(1),w2=avgWindow(2);
+  if(!n)return ['note','先连续记一周体重（每天早上空腹称），之后这里会按周平均给你调整建议。'];
+  if(w0==null||w1==null)return ['note',`已经记了 ${n} 天。满两周、每周至少 3 天后开始给建议。`];
+  const r=w0-w1;
+  if(r<=-1)return ['warnbox',`这周平均比上周轻了 ${(-r).toFixed(1)}kg，掉得偏快。如果很累、力气变小，每天加一份主食或一次加餐。`];
+  if(r<=-0.3)return ['goodbox',`这周平均比上周轻了 ${(-r).toFixed(1)}kg，节奏正好，照现在这样继续。`];
+  if(w2!=null&&(w1-w2)>-0.3)return ['warnbox','连续两周平均体重几乎没降：晚饭的米饭少吃三分之一到一半，或者每天多走 3000 步。'];
+  return ['note',`这周平均只变化了 ${r>0?'+':''}${r.toFixed(1)}kg，再观察一周。刚开始练的几周，腰围变小也说明在减脂。`];}
+function chartSVG(list){const end=today(),start=addDays(end,-41),pts=list.filter(b=>b.d>=start);
+  if(pts.length<2)return '<p class="small muted">记满两天后，这里会出现体重曲线。</p>';
+  const W=320,H=170,L=34,Rr=8,T=10,B=22,ws=pts.map(p=>p.w);let lo=Math.floor(Math.min(...ws)-.5),hi=Math.ceil(Math.max(...ws)+.5);if(hi-lo<2)hi=lo+2;
+  const x=d=>L+(W-L-Rr)*((parseYmd(d)-parseYmd(start))/864e5)/41,y=w=>T+(H-T-B)*(hi-w)/(hi-lo),step=(hi-lo)>6?2:1;
+  let s=`<svg viewBox="0 0 ${W} ${H}" class="chart" role="img" aria-label="最近 6 周体重曲线">`;
+  for(let v=lo;v<=hi;v+=step)s+=`<line x1="${L}" x2="${W-Rr}" y1="${f1(y(v))}" y2="${f1(y(v))}" stroke="var(--line)" stroke-width="1"/><text x="${L-6}" y="${f1(y(v)+4)}" text-anchor="end">${v}</text>`;
+  [start,addDays(start,21),end].forEach((d,i)=>{s+=`<text x="${f1(x(d))}" y="${H-5}" text-anchor="${['start','middle','end'][i]}">${parseYmd(d).getMonth()+1}/${parseYmd(d).getDate()}</text>`;});
+  const av=pts.map(p=>{const from=addDays(p.d,-6),xs=list.filter(b=>b.d>=from&&b.d<=p.d).map(b=>b.w);return xs.length>=2?[x(p.d),y(xs.reduce((a,b)=>a+b,0)/xs.length)]:null;}).filter(Boolean);
+  if(av.length>=2)s+=`<polyline points="${av.map(q=>f1(q[0])+','+f1(q[1])).join(' ')}" fill="none" stroke="var(--track)" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>`;
+  pts.forEach((p,i)=>{const lastP=i===pts.length-1;s+=`<circle cx="${f1(x(p.d))}" cy="${f1(y(p.w))}" r="${lastP?4:2.6}" fill="${lastP?'var(--track)':'var(--fig-far)'}"/>`;});
+  return s+'</svg><p class="small muted">灰点是每天的体重，红线是 7 天平均。</p>';}
+function renderLog(){
+  const v=document.getElementById('v-log'),list=bodyList(),last=list[list.length-1],w0=avgWindow(0),w1=avgWindow(1),d=today(),b=Store.get('body',d)||{},[acls,atxt]=advice();
+  const mon=addDays(d,-((new Date().getDay()+6)%7)),ss=Object.values(Store.data.sessions).filter(s=>s&&s.date&&(s.type==='C'?s.done:started(s))).sort((a,b)=>a.date<b.date?1:-1);
+  const ns=ss.filter(s=>s.date>=mon&&s.type!=='C').length,nc=ss.filter(s=>s.date>=mon&&s.type==='C').length;
+  const rows=ss.slice(0,10).map(s=>{const sets=Object.values(s.sets||{}).reduce((a,arr)=>a+arr.filter(x=>x&&x.ok).length,0);
+    return `<tr><td>${mdText(s.date)} 周${WD[parseYmd(s.date).getDay()]}</td><td>${s.type==='C'?'有氧 · '+esc(s.kind||''):PLAN[s.type].name}</td><td class="n">${s.type==='C'?(s.min?s.min+' 分钟':'—'):sets+' 组'}</td></tr>`;}).join('');
+  const wl=list.filter(x=>x.waist).slice(-6).reverse();
+  v.innerHTML=`<div class="card"><h3>记体重和腰围</h3>
+    <div class="inrow" style="grid-template-columns:1fr 1fr"><label>日期<span class="field-in"><input id="ld" type="date" value="${d}" max="${d}"></span></label>
+      <label>体重<span class="field-in"><input id="lw" inputmode="decimal" type="text" placeholder="${last?last.w:'78.0'}" value="${b.w??''}"><span>kg</span></span></label></div>
+    <div class="inrow" style="grid-template-columns:1fr auto"><label>腰围（每周一次，可以不填）<span class="field-in"><input id="lwa" inputmode="decimal" type="text" placeholder="绕肚脐一圈" value="${b.waist??''}"><span>cm</span></span></label>
+      <button class="btn primary" data-act="log-save">保存</button></div>
+    <p class="small muted">同一天再记一次会覆盖之前的。</p></div>
+  <div class="stats"><div class="stat"><div class="k">最新</div><div class="v">${last?last.w.toFixed(1):'—'}<small>kg</small></div></div>
+    <div class="stat"><div class="k">7 天平均</div><div class="v">${w0?w0.toFixed(1):'—'}<small>kg</small></div></div>
+    <div class="stat"><div class="k">比上周</div><div class="v">${w0&&w1?((w0-w1>0?'+':'')+(w0-w1).toFixed(1)):'—'}<small>kg</small></div></div></div>
+  <div class="${acls}">${atxt}</div>
+  <div class="card"><h3>最近 6 周<span class="tag">第一阶段目标 71–73kg</span></h3>${chartSVG(list)}</div>
+  <div class="card"><h3>腰围</h3>${wl.length?'<table class="tbl"><tbody>'+wl.map(x=>`<tr><td>${mdText(x.d)}</td><td class="n">${x.waist} cm</td></tr>`).join('')+'</tbody></table>':'<p class="small muted">每周量一次，绕肚脐一圈。腰围比体重更能看出脂肪有没有少。</p>'}</div>
+  <div class="card"><h3>训练记录<span class="tag">本周力量 ${ns} 次 · 有氧 ${nc} 次</span></h3>${rows?`<div class="scroll-x"><table class="tbl"><tbody>${rows}</tbody></table></div>`:'<p class="small muted">完成第一次训练后会出现在这里。</p>'}</div>
+  <div class="card"><h3>备份</h3><p class="small muted">记录只存在这台手机的这个 App 里。删掉 App 或清除网站数据，记录就没了。建议每两周导出一次备份，存到「文件」或发给自己。</p>
+    <div class="inrow" style="grid-template-columns:1fr 1fr"><button type="button" class="btn ghost" data-act="export">导出备份</button><label class="btn ghost" for="importFile">导入备份</label></div>
+    <input id="importFile" type="file" accept="application/json,.json" style="position:absolute;width:1px;height:1px;opacity:0;pointer-events:none"></div>`;}
+function exportData(){
+  const json=JSON.stringify({app:'t78',version:1,exported:new Date().toISOString(),data:Store.data}),name=`78to70-backup-${today()}.json`;
+  try{const file=new File([json],name,{type:'application/json'});
+    if(navigator.canShare&&navigator.canShare({files:[file]})){navigator.share({files:[file],title:'训练本备份'}).catch(()=>{});return;}}catch(e){}
+  try{const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([json],{type:'application/json'}));a.download=name;document.body.appendChild(a);a.click();
+    setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove();},1500);toast('已导出');}catch(e){toast('导出失败，请再试一次');}}
+document.addEventListener('change',e=>{if(e.target.id!=='importFile')return;const f=e.target.files&&e.target.files[0];if(!f)return;
+  const r=new FileReader();r.onload=()=>{try{const j=JSON.parse(r.result),d=j&&j.data;if(!d||typeof d!=='object')throw 0;let n=0;
+      COLS.forEach(c=>{const src=d[c]||{};Object.keys(src).forEach(k=>{Store.data[c]={...Store.data[c],[k]:src[k]};n++;});});
+      Store.saveLocal();Store.emit();toast(`已导入 ${n} 条记录`);}catch(err){toast('这个文件不是训练本的备份');}e.target.value='';};
+  r.readAsText(f);});
+
+/* ---------- exercise sheet ---------- */
+function openSheet(ex,rx){UI.sheet={ex,v:0,rx:rx||''};renderSheet();const s=document.getElementById('sheet');s.hidden=false;s.scrollTop=0;document.body.style.overflow='hidden';}
+function renderSheet(){const {ex:key,v,rx}=UI.sheet,ex=EX[key],va=ex.variants[v];
+  document.getElementById('sheetBody').innerHTML=`<div class="sheethead"><h2 id="sheetTitle">${ex.name}</h2><button type="button" class="close" data-act="close" aria-label="关闭">✕</button></div>
+  ${ex.variants.length>1?`<div class="seg" role="group" aria-label="动作版本">${ex.variants.map((x,i)=>`<button type="button" data-act="variant" data-i="${i}" aria-pressed="${i===v}">${x.label}</button>`).join('')}</div>`:''}
+  <div class="stage"><svg viewBox="0 0 240 180" class="fig" role="img" aria-label="${esc(va.label)}动作示意动画"><g id="figG"></g></svg>
+    <button type="button" class="btn ghost sm play" data-act="play" id="playBtn">暂停</button><div class="fig-cap">${CAPTION[va.anim]||''}</div></div>
+  ${rx?`<div class="note">今天：<b>${esc(rx)}</b></div>`:''}
+  ${va.note?`<div class="goodbox"><b>${va.label}怎么做：</b>${va.note}</div>`:''}
+  <dl class="facts"><dt>练哪里</dt><dd>${ex.muscles}</dd><dt>器材</dt><dd>${ex.equip}</dd><dt>呼吸</dt><dd>${ex.breath}</dd>${ex.start?`<dt>重量</dt><dd>${ex.start}</dd>`:''}</dl>
+  ${ex.warn?`<div class="warnbox">${ex.warn}</div>`:''}
+  <div class="card"><h3>${v>0?'标准动作步骤':'步骤'}</h3><ol class="steps">${ex.steps.map(x=>`<li><span>${x}</span></li>`).join('')}</ol></div>
+  <div class="card"><h3>要点</h3><ul class="olist">${ex.cues.map(x=>`<li><span>${x}</span></li>`).join('')}</ul></div>
+  <div class="card"><h3>常见错误</h3><ul class="xlist">${ex.mistakes.map(x=>`<li><span>${x}</span></li>`).join('')}</ul></div>
+  ${ex.extra?`<div class="note">${ex.extra}</div>`:''}
+  <a class="ext" href="https://search.bilibili.com/all?keyword=${encodeURIComponent(ex.search)}" target="_blank" rel="noopener">在 B 站看真人示范 ↗</a>
+  <p class="small muted">动画是简化的侧面示意。第一次做新动作，最好再看一遍真人视频，或者对着镜子、录视频检查。</p>`;
+  document.getElementById('playBtn').textContent=Player.mount(document.getElementById('figG'),va.anim)?'暂停':'播放';}
+function closeSheet(){Player.stop();document.getElementById('sheet').hidden=true;UI.sheet=null;document.body.style.overflow='';}
+
+/* ---------- actions ---------- */
+const parseNum = v=>{const n=parseFloat(String(v??'').replace(',','.'));return isFinite(n)?n:null;};
+function toast(msg){let t=document.getElementById('toast');
+  if(!t){t=document.createElement('div');t.id='toast';t.setAttribute('role','status');t.style.cssText='position:fixed;left:50%;top:calc(env(safe-area-inset-top,0px) + 58px);transform:translateX(-50%);z-index:40;background:var(--ink);color:var(--bg);padding:8px 16px;border-radius:999px;font-size:14px;max-width:90vw';document.body.appendChild(t);}
+  t.textContent=msg;t.hidden=false;clearTimeout(t._h);t._h=setTimeout(()=>{t.hidden=true;},1800);}
+function sessionFor(id){const cur=Store.get('sessions',id),[date,type]=id.split('_');return cur?clone(cur):{date,type,sets:{},done:false};}
+function updateSet(id,ex,n,patch,rerender){const s=sessionFor(id),it=PLAN[s.type].items.find(i=>i.ex===ex);s.sets=s.sets||{};
+  const arr=(s.sets[ex]||[]).slice();while(arr.length<it.sets)arr.push(null);arr[n]={...(arr[n]||{}),...patch};s.sets[ex]=arr;s.updated=new Date().toISOString();
+  Store.put('sessions',id,s,!rerender);}
+function tickSet(t){Timer.unlock();const {id,ex}=t.dataset,n=+t.dataset.n,cur=(((Store.get('sessions',id)||{}).sets||{})[ex]||[])[n]||{},on=!cur.ok,patch={ok:on};
+  if(on){const rIn=document.getElementById(`r-${id}-${ex}-${n}`),kgIn=document.getElementById(`kg-${id}-${ex}-${n}`);
+    if(rIn){const x=parseNum(rIn.value)??parseNum(rIn.placeholder);if(x!=null)patch.r=x;}
+    if(kgIn){const x=parseNum(kgIn.value)??parseNum(kgIn.placeholder);if(x!=null)patch.kg=x;}}
+  updateSet(id,ex,n,patch,true);
+  if(on){const it=PLAN[id.split('_')[1]].items.find(i=>i.ex===ex),cnt=Store.get('sessions',id).sets[ex].filter(x=>x&&x.ok).length,nm=EX[ex].name;
+    Timer.start(restFor(ex),cnt>=it.sets?`${nm}做完了，休息后换下一个动作`:`${nm}第 ${cnt} 组完成，休息一下`);}}
+function startWorkout(k){UI.workout=true;UI.override=k;Timer.unlock();Wake.on();render();window.scrollTo(0,0);}
+function finishWorkout(k){const id=today()+'_'+k,s=sessionFor(id);s.done=true;s.updated=new Date().toISOString();Store.put('sessions',id,s);UI.workout=false;Timer.stop();Wake.off();window.scrollTo(0,0);toast('训练完成，已保存');}
+function setCardio(patch,silent){const d=today(),id=d+'_C',cur=Store.get('sessions',id),s=cur?clone(cur):{date:d,type:'C',kind:'跑走结合',min:null,done:false};Object.assign(s,patch);Store.put('sessions',id,s,silent);}
+function dayDoc(){const d=today(),cur=Store.get('days',d);return cur?clone(cur):{date:d};}
+function toggleHabit(k){const x=dayDoc();x.habits={...(x.habits||{}),[k]:!(x.habits||{})[k]};Store.put('days',x.date,x);}
+function addProtein(g){const x=dayDoc();x.protein=(x.protein||0)+g;x.plog=[...(x.plog||[]),g].slice(-40);Store.put('days',x.date,x);}
+function undoProtein(){const x=dayDoc(),log=(x.plog||[]).slice(),g=log.pop()||0;x.plog=log;x.protein=Math.max(0,(x.protein||0)-g);Store.put('days',x.date,x);}
+function saveWeight(date,wStr,waistStr){
+  if(!/^\d{4}-\d\d-\d\d$/.test(date||''))date=today();
+  const cur=Store.get('body',date),o=cur?clone(cur):{d:date},w=parseNum(wStr),wa=parseNum(waistStr);
+  if(w!=null){if(w<30||w>250){toast('体重看起来不对，单位是 kg');return;}o.w=Math.round(w*10)/10;}
+  if(wa!=null){if(wa<40||wa>200){toast('腰围看起来不对，单位是 cm');return;}o.waist=Math.round(wa*10)/10;}
+  if(typeof o.w!=='number'){toast('先填体重');return;}
+  o.d=date;document.activeElement&&document.activeElement.blur&&document.activeElement.blur();Store.put('body',date,o);toast('已保存');}
+
+/* ---------- routing + render ---------- */
+const TABS=['today','train','food','log'];
+let pendingRender=false,prTimer=0;
+function render(){const ae=document.activeElement;
+  if(ae&&ae.tagName==='INPUT'&&ae.closest('.view')){pendingRender=true;return;}
+  pendingRender=false;
+  document.getElementById('dateText').textContent=`${mdText(today())} 周${WD[new Date().getDay()]}`;
+  ({today:renderToday,train:renderTrain,food:renderFood,log:renderLog})[UI.tab]();}
+function go(tab,fromHash){if(!TABS.includes(tab))tab='today';UI.tab=tab;
+  document.querySelectorAll('.view').forEach(v=>{v.hidden=v.dataset.view!==tab;});
+  document.querySelectorAll('.nav [data-tab]').forEach(b=>{if(b.dataset.tab===tab)b.setAttribute('aria-current','page');else b.removeAttribute('aria-current');});
+  if(!fromHash&&location.hash!=='#'+tab){try{history.replaceState(null,'','#'+tab);}catch(e){}}
+  render();window.scrollTo(0,0);}
+document.addEventListener('focusout',()=>{if(!pendingRender)return;clearTimeout(prTimer);prTimer=setTimeout(()=>{if(pendingRender)render();},450);});
+document.addEventListener('click',e=>{const t=e.target.closest('[data-act]');if(!t)return;const a=t.dataset.act;
+  if(a==='tab')go(t.dataset.tab);
+  else if(a==='hint-off'){lsSet('t78-hint','1');render();}
+  else if(a==='kind'){UI.override=t.dataset.k;UI.workout=false;render();}
+  else if(a==='ex')openSheet(t.dataset.ex,t.dataset.rx);
+  else if(a==='close')closeSheet();
+  else if(a==='variant'){UI.sheet.v=+t.dataset.i;renderSheet();}
+  else if(a==='play')t.textContent=Player.toggle()?'暂停':'播放';
+  else if(a==='start')startWorkout(t.dataset.k);
+  else if(a==='finish')finishWorkout(t.dataset.k);
+  else if(a==='reopen'){UI.workout=true;UI.override=t.dataset.k;render();}
+  else if(a==='tick')tickSet(t);
+  else if(a==='ctype')setCardio({kind:t.dataset.t});
+  else if(a==='cdone'){const s=Store.get('sessions',today()+'_C')||{},m=parseNum((document.getElementById('cmin')||{}).value);setCardio({done:!s.done,min:m??s.min??null});if(!s.done)toast('有氧完成，已保存');}
+  else if(a==='habit')toggleHabit(t.dataset.k);
+  else if(a==='p-add')addProtein(PROTEIN_ADD[+t.dataset.i].g);
+  else if(a==='p-undo')undoProtein();
+  else if(a==='export')exportData();
+  else if(a==='wq-save')saveWeight(today(),(document.getElementById('wq')||{}).value,null);
+  else if(a==='log-save')saveWeight(document.getElementById('ld').value,document.getElementById('lw').value,document.getElementById('lwa').value);});
+document.addEventListener('input',e=>{const t=e.target;if(!t.dataset)return;
+  if(t.dataset.act==='in')updateSet(t.dataset.id,t.dataset.ex,+t.dataset.n,{[t.dataset.f]:parseNum(t.value)},false);
+  else if(t.dataset.act==='cmin')setCardio({min:parseNum(t.value)},true);});
+document.addEventListener('keydown',e=>{if(e.key==='Escape'&&UI.sheet)closeSheet();});
+document.querySelectorAll('.nav [data-tab]').forEach(b=>b.addEventListener('click',()=>go(b.dataset.tab)));
+document.getElementById('timerSkip').addEventListener('click',()=>Timer.stop());
+document.getElementById('timerAdd').addEventListener('click',()=>Timer.add(30));
+document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible')render();});
+window.addEventListener('hashchange',()=>go(location.hash.slice(1),true));
+
+Store.on(render);
+go((location.hash||'#today').slice(1),true);
+Store.init();
+if('serviceWorker' in navigator)window.addEventListener('load',()=>{navigator.serviceWorker.register('sw.js').catch(()=>{});});
+</script>
+</body>
+</html>

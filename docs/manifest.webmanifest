@@ -1,0 +1,16 @@
+{
+  "name": "78→70 训练本",
+  "short_name": "训练本",
+  "description": "宿舍训练 + 食堂饮食的减脂计划，带动作动画指导，可以离线使用。",
+  "lang": "zh-CN",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#EDF1EB",
+  "theme_color": "#1E5B3C",
+  "icons": [
+    { "src": "icon-192.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "icon-512.png", "sizes": "512x512", "type": "image/png" },
+    { "src": "icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}
