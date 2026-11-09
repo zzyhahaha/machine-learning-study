@@ -24,8 +24,11 @@ self.addEventListener('fetch', e => {
     if (req.mode === 'navigate') {
       e.respondWith(
         Promise.race([fetch(req), timeout(3000)])
-          .then(res => { const copy = res.clone(); caches.open(CACHE).then(c => c.put('./index.html', copy)); return res; })
-          .catch(() => caches.match('./index.html').then(r => r || caches.match('./')))
+          .then(res => {
+            if (!res.ok) throw new Error('status ' + res.status); // 网站出错或下线时，继续用手机里存好的版本
+            const copy = res.clone(); caches.open(CACHE).then(c => c.put('./index.html', copy)); return res;
+          })
+          .catch(() => caches.match('./index.html').then(r => r || caches.match('./')).then(r => r || fetch(req)))
       );
       return;
     }
